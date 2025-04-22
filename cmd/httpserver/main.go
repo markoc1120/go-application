@@ -1,18 +1,18 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 
 	"github.com/markoc1120/go-application/adapters/httpserver"
+	config "github.com/markoc1120/go-application/configuration"
 	"github.com/markoc1120/go-application/domain/players"
 )
 
-const (
-	addr = ":8080"
-)
-
 func main() {
+	cfg := config.NewConfig()
 	server := &httpserver.PlayerServer{Store: players.NewInMemoryPlayerStore()}
-	log.Fatal(http.ListenAndServe(addr, server))
+	log.Printf("Starting server on :%d", cfg.Server.Port)
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", cfg.Server.Port), server))
 }

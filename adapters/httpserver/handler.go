@@ -40,10 +40,8 @@ func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func (p *PlayerServer) showScore(w http.ResponseWriter, player string) {
-
-	score, _ := p.Store.GetPlayerScore(player)
-
-	if score == 0 {
+	score, err := p.Store.GetPlayerScore(player)
+	if score == 0 || err != nil {
 		w.WriteHeader(http.StatusNotFound)
 	}
 
