@@ -12,7 +12,7 @@ import (
 
 func main() {
 	cfg := config.NewConfig()
-	server := &httpserver.PlayerServer{Store: players.NewInMemoryPlayerStore()}
+	server := httpserver.NewPlayerServer(players.NewInMemoryPlayerStore())
 	log.Printf("Starting server on :%d", cfg.Server.Port)
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", cfg.Server.Port), server))
 }

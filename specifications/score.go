@@ -18,5 +18,4 @@ func ScoreSpecification(t testing.TB, store players.PlayerStore) {
 	got, err = store.GetPlayerScore("Mark")
 	assert.NoError(t, err)
 	assert.Equal(t, got, 1)
-
 }

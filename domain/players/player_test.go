@@ -7,11 +7,13 @@ import (
 	"testing"
 
 	"github.com/markoc1120/go-application/adapters/httpserver"
+	"github.com/markoc1120/go-application/domain/players"
 )
 
 type StubPlayerStore struct {
 	scores   map[string]int
 	winCalls []string
+	league   []players.Player
 }
 
 func (s *StubPlayerStore) GetPlayerScore(name string) (int, error) {
@@ -23,15 +25,20 @@ func (s *StubPlayerStore) RecordWin(name string) error {
 	return nil
 }
 
-func TestGETPlayer(t *testing.T) {
+func (s *StubPlayerStore) GetLeague() ([]players.Player, error) {
+	return s.league, nil
+}
+
+func TestPlayer(t *testing.T) {
 	store := StubPlayerStore{
 		map[string]int{
 			"Pepper": 20,
 			"Floyd":  10,
 		},
 		nil,
+		nil,
 	}
-	server := &httpserver.PlayerServer{Store: &store}
+	server := httpserver.NewPlayerServer(&store)
 	t.Run("returns Pepper's score", func(t *testing.T) {
 		request := newGetScoreRequest("Pepper")
 		response := httptest.NewRecorder()
@@ -64,8 +71,9 @@ func TestStoreWins(t *testing.T) {
 	store := StubPlayerStore{
 		map[string]int{},
 		nil,
+		nil,
 	}
-	server := &httpserver.PlayerServer{Store: &store}
+	server := httpserver.NewPlayerServer(&store)
 
 	t.Run("it returns accepted on POST", func(t *testing.T) {
 		player := "Pepper"

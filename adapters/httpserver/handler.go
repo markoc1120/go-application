@@ -1,6 +1,7 @@
 package httpserver
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"strings"
@@ -9,21 +10,25 @@ import (
 )
 
 const (
-	playersPath = "/players"
+	playersPath     = "/players"
+	leaguePath      = "/league"
+	JsonContentType = "application/json"
 )
 
 type PlayerServer struct {
 	Store players.PlayerStore
+	http.Handler
 }
 
-func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	path := r.URL.Path
+func NewPlayerServer(store players.PlayerStore) *PlayerServer {
+	p := new(PlayerServer)
+	p.Store = store
 
-	if strings.HasPrefix(path, playersPath) {
-		p.playersHandler(w, r)
-		return
-	}
-	w.WriteHeader(http.StatusNotFound)
+	router := http.NewServeMux()
+	router.Handle(leaguePath, http.HandlerFunc(p.leagueHandler))
+	router.Handle(playersPath+"/", http.HandlerFunc(p.playersHandler))
+	p.Handler = router
+	return p
 }
 
 func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {
@@ -37,6 +42,19 @@ func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {
 	default:
 		w.WriteHeader(http.StatusMethodNotAllowed)
 	}
+}
+
+func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("content-type", JsonContentType)
+	players, err := p.Store.GetLeague()
+	if err != nil {
+		return
+	}
+	err = json.NewEncoder(w).Encode(players)
+	if err != nil {
+		return
+	}
+	w.WriteHeader(http.StatusOK)
 }
 
 func (p *PlayerServer) showScore(w http.ResponseWriter, player string) {

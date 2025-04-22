@@ -1,10 +1,13 @@
 package httpserver
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
 	"strconv"
+
+	"github.com/markoc1120/go-application/domain/players"
 )
 
 type Driver struct {
@@ -38,4 +41,20 @@ func (d Driver) RecordWin(name string) error {
 	}
 	defer res.Body.Close()
 	return nil
+}
+
+func (d Driver) GetLeague() ([]players.Player, error) {
+	res, err := d.Client.Get(d.BaseURL + leaguePath)
+	if err != nil {
+		return nil, err
+	}
+	defer res.Body.Close()
+
+	var players []players.Player
+
+	err = json.NewDecoder(res.Body).Decode(&players)
+	if err != nil {
+		return nil, err
+	}
+	return players, nil
 }
