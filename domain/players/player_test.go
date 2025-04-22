@@ -1,10 +1,12 @@
-package main
+package players_test
 
 import (
 	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/markoc1120/go-application/adapters/httpserver"
 )
 
 type StubPlayerStore struct {
@@ -12,12 +14,13 @@ type StubPlayerStore struct {
 	winCalls []string
 }
 
-func (s *StubPlayerStore) GetPlayerScore(name string) int {
-	return s.scores[name]
+func (s *StubPlayerStore) GetPlayerScore(name string) (int, error) {
+	return s.scores[name], nil
 }
 
-func (s *StubPlayerStore) RecordWin(name string) {
+func (s *StubPlayerStore) RecordWin(name string) error {
 	s.winCalls = append(s.winCalls, name)
+	return nil
 }
 
 func TestGETPlayer(t *testing.T) {
@@ -28,7 +31,7 @@ func TestGETPlayer(t *testing.T) {
 		},
 		nil,
 	}
-	server := &PlayerServer{&store}
+	server := &httpserver.PlayerServer{Store: &store}
 	t.Run("returns Pepper's score", func(t *testing.T) {
 		request := newGetScoreRequest("Pepper")
 		response := httptest.NewRecorder()
@@ -62,7 +65,7 @@ func TestStoreWins(t *testing.T) {
 		map[string]int{},
 		nil,
 	}
-	server := &PlayerServer{&store}
+	server := &httpserver.PlayerServer{Store: &store}
 
 	t.Run("it returns accepted on POST", func(t *testing.T) {
 		player := "Pepper"

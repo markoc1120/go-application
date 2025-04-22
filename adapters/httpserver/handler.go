@@ -1,0 +1,59 @@
+package httpserver
+
+import (
+	"fmt"
+	"net/http"
+	"strings"
+
+	"github.com/markoc1120/go-application/domain/players"
+)
+
+const (
+	playersPath = "/players"
+)
+
+type PlayerServer struct {
+	Store players.PlayerStore
+}
+
+func (p *PlayerServer) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	path := r.URL.Path
+
+	if strings.HasPrefix(path, playersPath) {
+		p.playersHandler(w, r)
+		return
+	}
+	w.WriteHeader(http.StatusNotFound)
+}
+
+func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {
+	player := strings.TrimPrefix(r.URL.Path, playersPath+"/")
+
+	switch r.Method {
+	case http.MethodPost:
+		p.processWin(w, player)
+	case http.MethodGet:
+		p.showScore(w, player)
+	default:
+		w.WriteHeader(http.StatusMethodNotAllowed)
+	}
+}
+
+func (p *PlayerServer) showScore(w http.ResponseWriter, player string) {
+
+	score, _ := p.Store.GetPlayerScore(player)
+
+	if score == 0 {
+		w.WriteHeader(http.StatusNotFound)
+	}
+
+	fmt.Fprint(w, score)
+}
+
+func (p *PlayerServer) processWin(w http.ResponseWriter, player string) {
+	err := p.Store.RecordWin(player)
+	if err != nil {
+		w.WriteHeader(http.StatusNotModified)
+	}
+	w.WriteHeader(http.StatusAccepted)
+}

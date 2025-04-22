@@ -1,6 +1,11 @@
-package main
+package players
 
 import "sync"
+
+type PlayerStore interface {
+	RecordWin(name string) error
+	GetPlayerScore(name string) (int, error)
+}
 
 func NewInMemoryPlayerStore() *InMemoryPlayerStore {
 	return &InMemoryPlayerStore{
@@ -14,14 +19,15 @@ type InMemoryPlayerStore struct {
 	lock  sync.RWMutex
 }
 
-func (i *InMemoryPlayerStore) RecordWin(name string) {
+func (i *InMemoryPlayerStore) RecordWin(name string) error {
 	i.lock.Lock()
 	defer i.lock.Unlock()
 	i.store[name]++
+	return nil
 }
 
-func (i *InMemoryPlayerStore) GetPlayerScore(name string) int {
+func (i *InMemoryPlayerStore) GetPlayerScore(name string) (int, error) {
 	i.lock.RLock()
 	defer i.lock.RUnlock()
-	return i.store[name]
+	return i.store[name], nil
 }
